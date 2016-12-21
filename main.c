@@ -20,9 +20,47 @@ static void muladd(uECC_word_t a,
     uECC_dword_t p = (uECC_dword_t)a * b;
     uECC_dword_t r01 = ((uECC_dword_t)(*r1) << uECC_WORD_BITS) | *r0;
     r01 += p;
-    *r2 += (r01 < p);
-    *r1 = r01 >> uECC_WORD_BITS;
-    *r0 = (uECC_word_t)r01;
+
+    uECC_word_t tr0,tr1,tr2,lr0,lr1,lr2;
+   
+    tr2 = *r2 + (r01 < p);
+    tr1 = r01 >> uECC_WORD_BITS;
+    tr0 = (uECC_word_t)r01;
+
+    uECC_word_t al,ah,bl,bh,cma,cmb,cm,ch,cl;
+    uECC_word_t r01l ,r01h;
+    r01l = *r0;
+    r01h = *r1;
+    al = a & 0x0000ffff;
+    ah = (a >> 16) & 0xffff;
+    bl = b & 0x0000ffff;
+    bh = (b >> 16) & 0xffff;
+    cma = ah * bl; 
+    cmb = al * bh; 
+    cm = cmb;
+    cm += cma;
+    if(cm < cma) {
+	ch = ah * bh + (0xffff & (cm >> 16)) + 0x10000;
+	cl = al * bl + (0xffff0000 & (cm << 16));
+    } else {
+	ch = ah * bh + (0xffff & (cm >> 16));
+	cl = al * bl + (0xffff0000 & (cm << 16));
+    }
+    r01l += cl;
+    if (r01l < cl)
+	r01h++;
+    r01h += ch;
+
+    lr2 = *r2 + (r01h < ch);
+    lr1 = r01h;
+    lr0 = r01l;
+    *r2 = tr2;
+    *r1 = tr1;
+    *r0 = tr0;
+    if((lr2 != tr2) || (lr1 != tr1) || (lr0 != tr0)) {
+	printf("tr:%x%x%x\n" ,tr2 ,tr1 ,tr0);
+	printf("lr:%x%x%x\n" ,lr2 ,lr1 ,lr0);
+    }
 }
 
 uECC_VLI_API void uECC_vli_set(uECC_word_t *dest, const uECC_word_t *src, wordcount_t num_words) {

@@ -3,13 +3,16 @@
 
 #include <inttypes.h>
 
+#define UINT64
+
 typedef int8_t wordcount_t;
 typedef int16_t bitcount_t;
 typedef int8_t cmpresult_t;
 
 typedef uint32_t uECC_word_t;
+#ifdef UINT64
 typedef uint64_t uECC_dword_t;
-
+#endif
 typedef const struct uECC_Curve_t * uECC_Curve;
 #define uECC_VLI_API static
 
