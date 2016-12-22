@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#define UINT64
+//#define UINT64
 
 typedef int8_t wordcount_t;
 typedef int16_t bitcount_t;
