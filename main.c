@@ -40,11 +40,13 @@ static void muladd(uECC_word_t a,
     cm = cmb;
     cm += cma;
     if(cm < cma) {
-	ch = ah * bh + (0xffff & (cm >> 16)) + 0x10000;
-	cl = al * bl + (0xffff0000 & (cm << 16));
+	cl = al * bl;
+        cl += (0xffff0000 & (cm << 16));
+	ch = ah * bh + (0xffff & (cm >> 16)) + 0x10000 + (cl < (0xffff0000 & (cm << 16)));
     } else {
-	ch = ah * bh + (0xffff & (cm >> 16));
-	cl = al * bl + (0xffff0000 & (cm << 16));
+	cl = al * bl;
+	cl += (0xffff0000 & (cm << 16));
+	ch = ah * bh + (0xffff & (cm >> 16)) + (cl < (0xffff0000 & (cm << 16)));
     }
     r01l += cl;
     if (r01l < cl)
