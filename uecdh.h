@@ -54,7 +54,7 @@ struct uECC_Curve_t {
 void vli_print(uint8_t *vli, unsigned int size) {
         unsigned int i;
     for(i=0; i<size; ++i) {
-        printf("%02X ", (unsigned)vli[i]);
+        printf("%02X", (unsigned)vli[i]);
     }
 }
 
