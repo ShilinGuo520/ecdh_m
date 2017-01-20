@@ -227,22 +227,6 @@ uECC_VLI_API void uECC_vli_bytesToNative(uECC_word_t *native,
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 uECC_VLI_API void uECC_vli_modSquare_fast(uECC_word_t *result,
                                           const uECC_word_t *left,
                                           uECC_Curve curve) {
@@ -277,15 +261,6 @@ uECC_VLI_API void uECC_vli_modSub(uECC_word_t *result,
         uECC_vli_add(result, result, mod, num_words);
     }
 }
-
-
-
-
-
-
-
-
-
 
 
 static void double_jacobian_default(uECC_word_t * X1,
@@ -675,19 +650,9 @@ int uECC_make_key(uint8_t *public_key,
     uECC_word_t _private[uECC_MAX_WORDS];
     uECC_word_t _public[uECC_MAX_WORDS * 2];
     uECC_word_t tries;
-
+    uECC_vli_bytesToNative(_private, private_key, curve->num_bytes);   
     if (EccPoint_compute_public_key(_public, _private, curve)) {
-        uECC_vli_nativeToBytes(private_key, BITS_TO_BYTES(curve->num_n_bits), _private);
         uECC_vli_nativeToBytes(public_key, curve->num_bytes, _public);
-        printf("_private:\n");
-        for (_i = 0 ;_i < 6 ;_i++)
-            printf("%x" ,_private[5-_i]);
-
-        printf("\nprivate_key:\n");
-        for (_i = 0 ;_i < 24 ;_i++) {
-            printf("%x" ,private_key[_i]);
-        }
-        printf("\n");
         uECC_vli_nativeToBytes(
             public_key + curve->num_bytes, curve->num_bytes, _public + curve->num_words);
         return 1;
@@ -717,19 +682,31 @@ int uECC_shared_secret(const uint8_t *public_key,
        attack to learn the number of leading zeros. */
     carry = regularize_k(_private, _private, tmp, curve);
 
-    /* If an RNG function was specified, try to get a random initial Z value to improve
-       protection against side-channel attacks. */
-//    if (g_rng_function) {
-//        if (!uECC_generate_random_int(p2[carry], curve->p, num_words)) {
-//            return 0;
-//        }
-        initial_Z = p2[carry];
-//    }
+    initial_Z = p2[carry];
 
     EccPoint_mult(_public, _public, p2[!carry], initial_Z, curve->num_n_bits + 1, curve);
     uECC_vli_nativeToBytes(secret, num_bytes, _public);
     return !EccPoint_isZero(_public, curve);
 }
+
+unsigned char Private_A[] = "07915f86918ddc27005df1d6cf0c142b625ed2eff4a518ff";
+unsigned char Private_B[] = "1e636ca790b50f68f15d8dbe86244e309211d635de00e16d";
+
+
+void str2hex(unsigned char *input_char , unsigned char *input_hex ,int num_byt)
+{
+        int i;
+        int input_len = num_byt * 2;
+        for (i = 0 ;i < input_len ;i++) {
+                if(input_char[i] > 57) {
+                        input_char[i] = input_char[i] - 87;
+                } else {
+                        input_char[i] = input_char[i] - 48;
+                }
+                input_hex[i/2] |= input_char[i] << 4*(1 - i%2);
+        }
+}
+
 
 int main()
 {
@@ -741,6 +718,9 @@ int main()
 	uint8_t secret2[32] = {0};
 	const struct uECC_Curve_t * curves[2];
 	curves[0] = &curve_secp192r1;
+
+	str2hex(Private_A, private1, 32);
+	str2hex(Private_B, private2, 32);
 
 	if (!uECC_make_key(public1, private1, curves[0]) ||
 			!uECC_make_key(public2, private2, curves[0])) {
@@ -776,5 +756,4 @@ int main()
 	printf("Shared secret 2 = ");
 	vli_print(secret2, 32);
 	printf("\n");
-
 }
